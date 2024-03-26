@@ -264,11 +264,17 @@ int dx[8], dy[8];
 short int boxColor[8];
 short int colors[10] = {0xffff, 0xf800, 0x7e0, 0x001f, 0xF81F, 0xFFE0, 0x07FF, 0x4380, 0x0384, 0x8384};
 
+#define PS2_BASE 0xff200100
+#define PIXEL_CTRL_BASE 0xff203020
+
+#define KEYCODE_ENTER 0x5a
+#define KEYCODE_S 0x1b
+#define KEYCODE_I 0x43
 
 int main(void)
 {
 
-    volatile int * pixel_ctrl_ptr = (int *)0xFF203020;
+    volatile int * pixel_ctrl_ptr = (int *) PIXEL_CTRL_BASE;
     // declare other variables(not shown)
     // initialize location and direction of rectangles(not shown)
 
@@ -292,18 +298,34 @@ int main(void)
             plot_pixel(x, y, start_screen[y][x]);
         }
     }
-		
-
         vsyncWait(); // swap front and back buffers on VGA vertical sync
         pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
     }
+}
+
+void waitForKey(char keyCode) {
+	// poll for the "make" signal of a given key, and return when we get it
+	volatile int *PS2_ptr = PS2_BASE;
+
+	int PS2_data, RVALID;
+	char inByte;
+	while (1) {
+    PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
+    RVALID = PS2_data & 0x8000; // extract the RVALID field 
+    if (RVALID) {
+      inByte = PS2_data & 0xFF;
+      if (inByte == keyCode) {
+				return;
+			}
+    }
+  }
 }
 
 void drawPicture(int x_loc, int y_loc) {
 }
 
 void vsyncWait() {
-    volatile int * pixel_ctrl_ptr = (int *)0xFF203020;
+    volatile int * pixel_ctrl_ptr = (int *) PIXEL_CTRL_BASE;
     *pixel_ctrl_ptr = 1;
     int status = *(pixel_ctrl_ptr + 3) & 1;
     while (status != 0) {
