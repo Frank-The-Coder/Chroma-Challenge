@@ -1,5 +1,27 @@
 #include <stdlib.h>
 
+#define BLUE 0x001f
+#define GREEN 0x07e0
+#define YELLOW 0xffe0
+#define ORANGE 0xe400
+#define RED 0xf800
+// #define PINK 0xf81f
+#define PURPLE 0xa1ff
+
+#define PS2_BASE 0xff200100
+#define PIXEL_CTRL_BASE 0xff203020
+
+#define KEYCODE_ENTER (char) 0x5a
+#define KEYCODE_S (char) 0x1b
+#define KEYCODE_I (char) 0x43
+
+#define KEYCODE_B (char) 0x32
+#define KEYCODE_G (char) 0x34
+#define KEYCODE_Y (char) 0x35
+#define KEYCODE_O (char) 0x44
+#define KEYCODE_R (char) 0x2D
+#define KEYCODE_P (char) 0x4D
+
 const short int start_screen[240][320] = {
 	{65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535},
 	{65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535},
@@ -734,6 +756,11 @@ const short int match_instruction[40][200] = {
 
 volatile int pixel_buffer_start; // global variable
 
+<<<<<<< HEAD
+=======
+void paintBGColor(short int c);
+char waitForKey(int numKeyCodes, const char keyCodes[numKeyCodes]);
+>>>>>>> 1d1044d (Add basic color switching functionality)
 void plot_pixel(int x, int y, short int line_color);
 void clear_screen();
 void draw_line(int x0, int y0, int x1, int y1, int color);
@@ -753,11 +780,23 @@ int titleX[3]; // x & y of the upper left corner of the 2x2 box
 //int dx, dy;
 int dTitle = -3;
 int finishRender = 0;
+<<<<<<< HEAD
 short int boxColor[8];
 short int colors[10] = {0xffff, 0xf800, 0x7e0, 0x001f, 0xF81F, 0xFFE0, 0x07FF, 0x4380, 0x0384, 0x8384};
 
 #define PS2_BASE 0xff200100
 #define PIXEL_CTRL_BASE 0xff203020
+=======
+
+int numColors = 6;
+short int colors[6] = {BLUE, GREEN, YELLOW, ORANGE, RED, PURPLE};
+char colorKeys[6] = {KEYCODE_B, KEYCODE_G, KEYCODE_Y, KEYCODE_O, KEYCODE_R, KEYCODE_P};
+int chosenColor = 0;
+
+
+// 0 - initial screen (before & after animation), 
+int screen = 0; 
+>>>>>>> 1d1044d (Add basic color switching functionality)
 
 #define KEYCODE_ENTER 0x5a
 #define KEYCODE_S 0x1b
@@ -786,59 +825,73 @@ int main(void)
 			draw_screen(start_screen);
     //clear_screen(); // pixel_buffer_start points to the pixel buffer
 	
-	waitForKey((char)KEYCODE_ENTER);
-    while (1)
-    {
-		if(move){
-			if(titleX[0] <= 10){ 
-				dTitle = 0;
-				move = 0;
-				
-				titleX[0] += 3;
-				draw_box(titleX[2], 76, 1, 113, 66, title);
-				draw_box(titleX[0], 76, 0, 113, 66, title);
-			}else{
-				draw_box(titleX[2], 76, 1, 113, 66, title);
-				draw_box(titleX[0], 76, 0, 113, 66, title);
+	const char keys[1] = {KEYCODE_ENTER};
+	waitForKey(1, keys);
 
-				titleX[2] = titleX[1];
-				titleX[1] = titleX[0];
+    while (1) {
+		if (screen == 0) {
+			if (move) {
+				if (titleX[0] <= 10) { 
+					move = 0;				
+				} else {
+					titleX[2] = titleX[1];
+					titleX[1] = titleX[0];
+					titleX[0] += dTitle;
 
-				titleX[0] += dTitle;
+					paintScreen(start_screen);
+					paintImg(titleX[0], titleY, 0, titleNumCols, titleNumRows, title);
+				}
 			}
-		}
-		
-		if(!move){
-			if(finishRender != 2){
-				draw_box(160, 50, 0, 120, 50, StartButton);
-				draw_box(160, 110, 0, 120, 50, InstructionButton);
+			if (!move) {
+				if (finishRender != 2) { // necessary to draw over front and back buffer
+					paintImg(160, 50, 0, 120, 50, StartButton);
+					paintImg(160, 110, 0, 120, 50, InstructionButton);
+					finishRender++;
+				} else {
+					const char keys[1] = {KEYCODE_S};
+					waitForKey(1, keys);
+					screen = 1;
+					finishRender = 0;
+				}
+			}
+		} else if (screen = 1) {
+			if (finishRender == 0) {
+				chosenColor = rand() % numColors;
+				paintBGColor(colors[chosenColor]);
 				finishRender++;
-			}else{
-				waitForKey((char)KEYCODE_S);
-				clear_screen();
+			} else if (finishRender == 1) {
+				paintBGColor(colors[chosenColor]);
+				finishRender++;
+			} else if (finishRender == 2) {
+				const char keys[1] = {colorKeys[chosenColor]};
+				finishRender = 0;
+				waitForKey(1, keys);
 			}
 		}
+
        	vsyncWait(); // swap front and back buffers on VGA vertical sync
     	pixel_buffer_start = *(pixel_ctrl_ptr + 1); // new back buffer
     }
 }
 
-void waitForKey(char keyCode) {
+char waitForKey(int numKeyCodes, const char keyCodes[numKeyCodes]) {
 	// poll for the "make" signal of a given key, and return when we get it
 	volatile int *PS2_ptr = (int*) PS2_BASE;
 
 	int PS2_data, RVALID;
 	char inByte;
 	while (1) {
-    PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
-    RVALID = PS2_data & 0x8000; // extract the RVALID field 
-    if (RVALID) {
-      inByte = PS2_data & 0xFF;
-      if (inByte == keyCode) {
-				return;
+		PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
+		RVALID = PS2_data & 0x8000; // extract the RVALID field 
+		if (RVALID) {
+			inByte = PS2_data & 0xFF;
+			for (int i = 0; i < numKeyCodes; ++i) {
+				if (inByte == keyCodes[i]) {
+					return keyCodes[i];
+				}
 			}
-    }
-  }
+		}
+  	}
 }
 
 // code for subroutines (not shown)
@@ -875,11 +928,12 @@ void draw_screen(const short int screen[240][320]) {
     }
 }
 
-int abs(int a) {
-    if (a < 0) {
-        return -a;
+void paintBGColor(short int c) {
+	for (int x = 0; x < 320; ++x) {
+        for (int y = 0; y < 240; ++y) {
+            plot_pixel(x, y, c);
+        }
     }
-    return a;
 }
 
 void clear_screen() {
