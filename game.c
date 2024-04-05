@@ -1,4 +1,18 @@
-#include <stdlib.h>
+
+#define BLUE 0x001f
+#define GREEN 0x07e0
+#define YELLOW 0xffe0
+#define ORANGE 0xe400
+#define RED 0xf800
+#define PINK 0xf81f
+#define PURPLE 0xa1ff
+
+#define PS2_BASE 0xff200100
+#define PIXEL_CTRL_BASE 0xff203020
+
+#define KEYCODE_ENTER 0x5a
+#define KEYCODE_S 0x1b
+#define KEYCODE_I 0x43
 
 const short int start_screen[240][320] = {
 	{65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535},
@@ -428,9 +442,6 @@ volatile int pixel_buffer_start; // global variable
 void waitForKey(char keyCode);
 void plot_pixel(int x, int y, short int line_color);
 void clear_screen();
-void draw_line(int x0, int y0, int x1, int y1, int color);
-void swap(int *a, int *b);
-int abs(int a);
 void vsyncWait();
 void paintScreen(const short int screen[240][320]);
 void paintImg(int x, int y, int e, int size_x, int size_y, const short int box_color[size_y][size_x]);
@@ -447,14 +458,10 @@ int titleY = 80;
 int dTitle = -8;
 int finishRender = 0;
 short int boxColor[8];
-short int colors[10] = {0xffff, 0xf800, 0x7e0, 0x001f, 0xF81F, 0xFFE0, 0x07FF, 0x4380, 0x0384, 0x8384};
+short int colors[7] = {BLUE, GREEN, YELLOW, ORANGE, RED, PINK, PURPLE};
 
-#define PS2_BASE 0xff200100
-#define PIXEL_CTRL_BASE 0xff203020
-
-#define KEYCODE_ENTER 0x5a
-#define KEYCODE_S 0x1b
-#define KEYCODE_I 0x43
+// 0 - initial screen, 1 - initial screen with start and instruction, 2 - 
+int scene = 0; 
 
 int main(void) {
 
@@ -557,64 +564,12 @@ void paintScreen(const short int screen[240][320]) {
     }
 }
 
-int abs(int a) {
-    if (a < 0) {
-        return -a;
-    }
-    return a;
-}
-
 void clear_screen() {
     for (int x = 0; x < 320; ++x) {
         for (int y = 0; y < 240; ++y) {
             plot_pixel(x, y, 0);
         }
     }
-}
-
-void draw_line(int x0, int y0, int x1, int y1, int color) {
-    char steep = 0;
-    if (abs(y1-y0) > abs(x1-x0)) {
-        steep = 1;
-    }
-
-    if (steep == 1) {
-        swap(&x0, &y0);
-        swap(&x1, &y1);
-    }
-    if (x0 > x1) {
-        swap(&x0, &x1);
-        swap(&y0, &y1);
-    }
-
-    int dx = x1 - x0;
-    int dy = abs(y1 - y0);
-    int error = -(dx/2);
-    int y = y0;
-
-    int ystep = 1;
-    if (y0 > y1) {
-        ystep = -1;
-    }
-
-    for (int x = x0; x <= x1; ++x) {
-        if (steep == 1) {
-            plot_pixel(y, x, color);
-        } else {
-            plot_pixel(x, y, color);
-        }
-        error = error + dy;
-        if (error > 0) {
-            y = y + ystep;
-            error = error - dx;
-        }
-    }
-}
-
-void swap(int *a, int *b) {
-    int temp = *a;
-    *a = *b;
-    *b = temp;
 }
 
 void plot_pixel(int x, int y, short int line_color) {
