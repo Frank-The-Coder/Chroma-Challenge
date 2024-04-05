@@ -425,14 +425,15 @@ const short int InstructionButton[50][120] = {
 	
 volatile int pixel_buffer_start; // global variable
 
+void waitForKey(char keyCode);
 void plot_pixel(int x, int y, short int line_color);
 void clear_screen();
 void draw_line(int x0, int y0, int x1, int y1, int color);
 void swap(int *a, int *b);
 int abs(int a);
 void vsyncWait();
-void draw_screen(const short int screen[240][320]);
-void draw_box(int x, int y, int e, int size_x, int size_y, const short int box_color[size_y][size_x]);
+void paintScreen(const short int screen[240][320]);
+void paintImg(int x, int y, int e, int size_x, int size_y, const short int box_color[size_y][size_x]);
 
 short int Buffer1[240][512]; // 240 rows, 512 (320 + padding) columns
 short int Buffer2[240][512];
@@ -440,8 +441,10 @@ short int Buffer2[240][512];
 
 // 2nd index: [0] is most recent value, [1] is one frame ago, [2] is two frames ago
 int titleX[3]; // x & y of the upper left corner of the 2x2 box
+int titleY = 80;
+
 //int dx, dy;
-int dTitle = -3;
+int dTitle = -8;
 int finishRender = 0;
 short int boxColor[8];
 short int colors[10] = {0xffff, 0xf800, 0x7e0, 0x001f, 0xF81F, 0xFFE0, 0x07FF, 0x4380, 0x0384, 0x8384};
@@ -453,58 +456,48 @@ short int colors[10] = {0xffff, 0xf800, 0x7e0, 0x001f, 0xF81F, 0xFFE0, 0x07FF, 0
 #define KEYCODE_S 0x1b
 #define KEYCODE_I 0x43
 
-int main(void)
-{
+int main(void) {
 
-	titleX[0] = 93;
+	titleX[0] = 90;
+	titleX[1] = 90;
+	titleX[2] = 90;
+	int titleNumRows = sizeof(title) / sizeof(title[0]);
+	int titleNumCols = sizeof(title[0]) / sizeof(title[0][0]);
 	int move = 1;
-    volatile int * pixel_ctrl_ptr = (int *) PIXEL_CTRL_BASE;
-    // declare other variables(not shown)
-    // initialize location and direction of rectangles(not shown)
 
-    /* set front pixel buffer to Buffer 1 */
-    *(pixel_ctrl_ptr + 1) = (int) &Buffer1; // first store the address in the  back buffer
-    /* now, swap the front/back buffers, to set the front buffer location */
+    volatile int * pixel_ctrl_ptr = (int *) PIXEL_CTRL_BASE;
+
+    *(pixel_ctrl_ptr + 1) = (int) &Buffer1; 
+    pixel_buffer_start = *(pixel_ctrl_ptr + 1);
+	paintScreen(start_screen);
     vsyncWait();
-    /* initialize a pointer to the pixel buffer, used by drawing functions */
-    pixel_buffer_start = *pixel_ctrl_ptr;
-			draw_screen(start_screen);
-    //clear_screen(); // pixel_buffer_start points to the pixel buffer
-    /* set back pixel buffer to Buffer 2 */
     *(pixel_ctrl_ptr + 1) = (int) &Buffer2;
     pixel_buffer_start = *(pixel_ctrl_ptr + 1); // we draw on the back buffer
-			draw_screen(start_screen);
-    //clear_screen(); // pixel_buffer_start points to the pixel buffer
+	paintScreen(start_screen);
 	
-	waitForKey((char)KEYCODE_ENTER);
-    while (1)
-    {
-		if(move){
-			if(titleX[0] <= 10){ 
-				dTitle = 0;
-				move = 0;
-				
-				titleX[0] += 3;
-				draw_box(titleX[2], 76, 1, 113, 66, title);
-				draw_box(titleX[0], 76, 0, 113, 66, title);
-			}else{
-				draw_box(titleX[2], 76, 1, 113, 66, title);
-				draw_box(titleX[0], 76, 0, 113, 66, title);
+	waitForKey((char) KEYCODE_ENTER);
 
+    while (1) {
+		if (move) {
+			if (titleX[0] <= 10) { 
+				move = 0;				
+			} else {
 				titleX[2] = titleX[1];
 				titleX[1] = titleX[0];
-
 				titleX[0] += dTitle;
+
+				paintScreen(start_screen);
+				paintImg(titleX[0], titleY, 0, titleNumCols, titleNumRows, title);
 			}
 		}
-		
-		if(!move){
-			if(finishRender != 2){
-				draw_box(160, 50, 0, 120, 50, StartButton);
-				draw_box(160, 110, 0, 120, 50, InstructionButton);
+
+		if (!move) {
+			if (finishRender != 2) {
+				paintImg(160, 50, 0, 120, 50, StartButton);
+				paintImg(160, 110, 0, 120, 50, InstructionButton);
 				finishRender++;
-			}else{
-				waitForKey((char)KEYCODE_S);
+			} else {
+				waitForKey((char) KEYCODE_S);
 				clear_screen();
 			}
 		}
@@ -515,7 +508,7 @@ int main(void)
 
 void waitForKey(char keyCode) {
 	// poll for the "make" signal of a given key, and return when we get it
-	volatile int *PS2_ptr = PS2_BASE;
+	volatile int *PS2_ptr = (int *) PS2_BASE;
 
 	int PS2_data, RVALID;
 	char inByte;
@@ -531,17 +524,16 @@ void waitForKey(char keyCode) {
   }
 }
 
-// code for subroutines (not shown)
-void draw_box(int x, int y, int e, int size_x, int size_y, const short int box_color[size_y][size_x]){
-	if(e){
-		for(int k = 0; k<size_y; k++){
-			for(int j = 0; j<size_x; j++){
+void paintImg(int x, int y, int erase, int size_x, int size_y, const short int box_color[size_y][size_x]){
+	if (erase) {
+		for (int k = 0; k < size_y; k++) {
+			for (int j = 0; j<size_x; j++) {
 				plot_pixel(x+j, y+k, 65535);
 			}
 		}
-	}else{
-		for(int k = 0; k<size_y; k++){
-			for(int j = 0; j<size_x; j++){
+	} else {
+		for (int k = 0; k < size_y; k++) {
+			for(int j = 0; j < size_x; j++){
 				plot_pixel(x+j, y+k, box_color[k][j]);
 			}
 		}
@@ -557,7 +549,7 @@ void vsyncWait() {
     }
 }
 
-void draw_screen(const short int screen[240][320]) {
+void paintScreen(const short int screen[240][320]) {
     for (int x = 0; x < 320; ++x) {
         for (int y = 0; y < 240; ++y) {
             plot_pixel(x, y, screen[y][x]);
@@ -625,9 +617,7 @@ void swap(int *a, int *b) {
     *b = temp;
 }
 
-
-void plot_pixel(int x, int y, short int line_color)
-{
+void plot_pixel(int x, int y, short int line_color) {
     volatile short int *one_pixel_address;
     one_pixel_address = pixel_buffer_start + (y << 10) + (x << 1);
     *one_pixel_address = line_color;
