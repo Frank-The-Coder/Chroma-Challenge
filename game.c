@@ -11,6 +11,8 @@
 #define PS2_BASE 0xff200100
 #define PIXEL_CTRL_BASE 0xff203020
 
+#define KEYCODE_NO_KEY (char) -1
+
 #define KEYCODE_ENTER (char) 0x5a
 #define KEYCODE_S (char) 0x1b
 #define KEYCODE_I (char) 0x43
@@ -756,11 +758,9 @@ const short int match_instruction[40][200] = {
 
 volatile int pixel_buffer_start; // global variable
 
-<<<<<<< HEAD
-=======
 void paintBGColor(short int c);
-char waitForKey(int numKeyCodes, const char keyCodes[numKeyCodes]);
->>>>>>> 1d1044d (Add basic color switching functionality)
+
+char waitForKey(int checkOnce, int numKeyCodes, const char keyCodes[numKeyCodes]);
 void plot_pixel(int x, int y, short int line_color);
 void clear_screen();
 void draw_line(int x0, int y0, int x1, int y1, int color);
@@ -769,7 +769,6 @@ int abs(int a);
 void vsyncWait();
 void draw_screen(const short int screen[240][320]);
 void draw_box(int x, int y, int e, int size_x, int size_y, const short int box_color[size_y][size_x]);
-void waitForKey(char keyCode);
 
 short int Buffer1[240][512]; // 240 rows, 512 (320 + padding) columns
 short int Buffer2[240][512];
@@ -780,23 +779,18 @@ int titleX[3]; // x & y of the upper left corner of the 2x2 box
 //int dx, dy;
 int dTitle = -3;
 int finishRender = 0;
-<<<<<<< HEAD
-short int boxColor[8];
-short int colors[10] = {0xffff, 0xf800, 0x7e0, 0x001f, 0xF81F, 0xFFE0, 0x07FF, 0x4380, 0x0384, 0x8384};
-
-#define PS2_BASE 0xff200100
-#define PIXEL_CTRL_BASE 0xff203020
-=======
 
 int numColors = 6;
 short int colors[6] = {BLUE, GREEN, YELLOW, ORANGE, RED, PURPLE};
 char colorKeys[6] = {KEYCODE_B, KEYCODE_G, KEYCODE_Y, KEYCODE_O, KEYCODE_R, KEYCODE_P};
 int chosenColor = 0;
 
+int timeAlloted = 10; // number of seconds we allow for an answer
+int progressBarWidth = 0;
+int progressBarY = 220;
 
 // 0 - initial screen (before & after animation), 
 int screen = 0; 
->>>>>>> 1d1044d (Add basic color switching functionality)
 
 #define KEYCODE_ENTER 0x5a
 #define KEYCODE_S 0x1b
@@ -826,7 +820,7 @@ int main(void)
     //clear_screen(); // pixel_buffer_start points to the pixel buffer
 	
 	const char keys[1] = {KEYCODE_ENTER};
-	waitForKey(1, keys);
+	waitForKey(0, 1, keys);
 
     while (1) {
 		if (screen == 0) {
@@ -849,7 +843,7 @@ int main(void)
 					finishRender++;
 				} else {
 					const char keys[1] = {KEYCODE_S};
-					waitForKey(1, keys);
+					waitForKey(0, 1, keys);
 					screen = 1;
 					finishRender = 0;
 				}
@@ -865,7 +859,8 @@ int main(void)
 			} else if (finishRender == 2) {
 				const char keys[1] = {colorKeys[chosenColor]};
 				finishRender = 0;
-				waitForKey(1, keys);
+				waitForKey(0, 1, keys);
+
 			}
 		}
 
@@ -874,13 +869,13 @@ int main(void)
     }
 }
 
-char waitForKey(int numKeyCodes, const char keyCodes[numKeyCodes]) {
+char waitForKey(int checkOnce, int numKeyCodes, const char keyCodes[numKeyCodes]) {
 	// poll for the "make" signal of a given key, and return when we get it
 	volatile int *PS2_ptr = (int*) PS2_BASE;
 
-	int PS2_data, RVALID;
-	char inByte;
-	while (1) {
+	if (checkOnce) {
+		int PS2_data, RVALID;
+		char inByte;
 		PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
 		RVALID = PS2_data & 0x8000; // extract the RVALID field 
 		if (RVALID) {
@@ -891,7 +886,23 @@ char waitForKey(int numKeyCodes, const char keyCodes[numKeyCodes]) {
 				}
 			}
 		}
-  	}
+		return KEYCODE_NO_KEY;
+	} else {
+		int PS2_data, RVALID;
+		char inByte;
+		while (1) {
+			PS2_data = *(PS2_ptr); // read the Data register in the PS/2 port
+			RVALID = PS2_data & 0x8000; // extract the RVALID field 
+			if (RVALID) {
+				inByte = PS2_data & 0xFF;
+				for (int i = 0; i < numKeyCodes; ++i) {
+					if (inByte == keyCodes[i]) {
+						return keyCodes[i];
+					}
+				}
+			}
+		}
+	}
 }
 
 // code for subroutines (not shown)
